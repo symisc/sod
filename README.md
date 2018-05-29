@@ -19,3 +19,5 @@ SOD was built to provide a common infrastructure for computer vision application
 * Amalgamated - All SOD source files are combined into a single C file (sod.c) for easy deployment.
 * Open-source, actively developed & maintained product.
 * Developer friendly support channels.
+
+![face detection using RealNets](https://i.imgur.com/ZLno8Lz.jpg)
