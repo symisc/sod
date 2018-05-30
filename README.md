@@ -10,7 +10,7 @@ Designed for computational efficiency and with a strong focus on real-time appli
 * <a href="https://sod.pixlab.io/samples.html">Decision trees</a> for single class, real-time object detection.
 * A brand new architecture written specifically for SOD named <a href="https://sod.pixlab.io/intro.html#realnets">RealNets</a>.
 
-![Multi-class object detection](https://i.imgur.com/Mq98uTv.png)
+![Multi-class object detection](https://i.imgur.com/Mq98uTv.png) 
 
 Cross platform, dependency free, amalgamated (single C file) and heavily optimized. Real world use cases includes:
 * Detect & recognize objects (faces included) at Real-time.
@@ -38,5 +38,23 @@ Cross platform, dependency free, amalgamated (single C file) and heavily optimiz
 * <a href="https://pixlab.io/downloads">Amalgamated</a> - All SOD source files are combined into a single C file (*sod.c*) for easy deployment.
 * Open-source, actively developed & maintained product.
 * Developer friendly <a href="https://sod.pixlab.io/support.html">support channels.</a>
+
+## Programming Interfaces
+
+The documentation works both as an API reference and a programming tutorial. It describes the internal structure of the library and guides one in creating applications with a few lines of code. Note that SOD is straightforward to learn, even for new programmer.
+
+ Resources |  Description
+------------ | -------------
+<a href="https://sod.pixlab.io/intro.html">SOD in 5 minutes or less</a> | A quick introduction to programming with the SOD Embedded C/C++ API with real-world code samples implemented in C.
+<a href="https://sod.pixlab.io/api.html">C/C++ API Reference Guide</a> | This document describes each API function in details. This is the reference document you should rely on.
+<a href="https://sod.pixlab.io/samples.html">C/C++ Code Samples</a> | Real world code samples on how to embed, load models and start experimenting with SOD.
+
+## Other useful links
+
+ Resources |  Description
+------------ | -------------
+<a href="https://pixlab.io/downloads">Downloads</a> | Get a copy of the last public release of SOD, pre-trained models, extensions and more. Start embedding and enjoy programming with.
+<a href="https://pixlab.io/sod">Copyright/Licensing</a> | SOD is an open-source, dual-licensed product. Find out more about the licensing situation there.
+<a href="https://sod.pixlab.io/support.html">Online Support Channels</a> | Having some trouble integrating SOD? Take a look at our numerous support channels.
 
 ![face detection using RealNets](https://i.imgur.com/ZLno8Lz.jpg)
