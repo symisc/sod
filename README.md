@@ -14,7 +14,7 @@ Designed for computational efficiency and with a strong focus on real-time appli
 
 Cross platform, dependency free, amalgamated (single C file) and heavily optimized. Real world use cases includes:
 * Detect & recognize objects (faces included) at Real-time.
-* License plate detection.
+* License plate extraction.
 * Intrusion detection.
 * Mimic Snapchat filters.
 * Classify human actions.
