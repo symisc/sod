@@ -1,6 +1,4 @@
-<h1 align="center">SOD</h1>
-
-## An Embedded Computer Vision & Machine Learning Library - [sod.pixlab.io](https://sod.pixlab.io)
+<h1 align="center">SOD<br/>An Embedded Computer Vision & Machine Learning Library<br/><a href="https://sod.pixlab.io">sod.pixlab.io</a></h1>
 
 ![Output](https://i.imgur.com/YIbb8wr.jpg)
 SOD is an embedded, modern cross-platform computer vision and machine learning software library that expose a set of APIs for deep-learning, advanced media analysis & processing including real-time, multi-class object detection and model training on embedded systems with limited computational resource and IoT devices.
