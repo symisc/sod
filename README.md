@@ -1,6 +1,13 @@
 <h1 align="center">SOD<br/><br/>An Embedded Computer Vision & Machine Learning Library<br/><a href="https://sod.pixlab.io">sod.pixlab.io</a></h1>
 
 ![Output](https://i.imgur.com/YIbb8wr.jpg)
+
+* [Introduction](#sod-embedded).
+* [Features](#notable-sod-features).
+* [Programming Resources](#programming-interfaces).
+* [Useful Links](#other-useful-links).
+
+## SOD Embedded
 SOD is an embedded, modern cross-platform computer vision and machine learning software library that expose a set of APIs for deep-learning, advanced media analysis & processing including real-time, multi-class object detection and model training on embedded systems with limited computational resource and IoT devices.
 
 SOD was built to provide a common infrastructure for computer vision applications and to accelerate the use of machine perception in open source as well commercial products.
@@ -24,7 +31,8 @@ Cross platform, dependency free, amalgamated (single C file) and heavily optimiz
 * Facial & Body shape extraction.
 * Image/Frame segmentation.
 
-#### Notable SOD features
+## Notable SOD features
+
 * Built for real world and real-time applications.
 * State-of-the-art, CPU optimized deep-neural networks including the brand new, exclusive <a href="https://sod.pixlab.io/intro.html#realnets">RealNets architecture</a>.
 * Patent-free, advanced computer vision <a href="https://sod.pixlab.io/samples.html">algorithms</a>.
