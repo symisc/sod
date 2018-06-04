@@ -4,7 +4,7 @@
 
 * [Introduction](#sod-embedded).
 * [Features](#notable-sod-features).
-* [Programming With SOD](#programming-interfaces).
+* [Programming with SOD](#programming-interfaces).
 * [Useful Links](#other-useful-links).
 
 ## SOD Embedded
