@@ -6,7 +6,7 @@
 * Compile this file together with the SOD embedded source code to generate
 * the executable. For example:
 *
-*  gcc sod.c rnn_text_gen.c -lm -Ofast -march=native -Wall -std=c99 -o sod_cnn_intro
+*  gcc sod.c rnn_text_gen.c -lm -Ofast -march=native -Wall -std=c99 -o sod_rnn
 *  
 * Under Microsoft Visual Studio (>= 2015), just drop `sod.c` and its accompanying
 * header files on your source tree and you're done. If you have any trouble
