@@ -1,8 +1,9 @@
 <h1 align="center">SOD<br/><br/>An Embedded Computer Vision & Machine Learning Library<br/><a href="https://sod.pixlab.io">sod.pixlab.io</a></h1>
 
-[![Getting Started](https://img.shields.io/badge/Getting%20Started-Now-f49242.svg)](https://sod.pixlab.io/intro.html)
+[![Build Status](https://travis-ci.org/symisc/sod.svg?branch=master)](https://travis-ci.org/symisc/sod)
 [![API documentation](https://img.shields.io/badge/API%20documentation-Ready-green.svg)](https://sod.pixlab.io/api.html)
 [![dependency](https://img.shields.io/badge/dependency-none-ff96b4.svg)](https://pixlab.io/downloads)
+[![Getting Started](https://img.shields.io/badge/Getting%20Started-Now-f49242.svg)](https://sod.pixlab.io/intro.html)
 [![license](https://img.shields.io/badge/License-dual--licensed-blue.svg)](https://pixlab.io/downloads)
 [![Mailing list](https://img.shields.io/badge/Mailing%20List-G.Groups-42b3f4.svg)](https://groups.google.com/d/forum/sod-embedded)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/sodcv/Lobby)
