@@ -13,7 +13,5 @@ directives on your .htaccess or Virtual host configuration:
 **AddOutputFilterByType DEFLATE application/wasm**
 
 
-For chrome users, you must test the model on actual Web server,
-whether served locally (i.e http://127.0.0.1) or remotely. 
-This is due to the fact that chrome does not allow WebAssembly
-modules to be loaded directly from the file system ( Edge and Firefox does not have such issue).
+For chrome users, you must test the model on an actual web server, whether served locally (i.e http://127.0.0.1) or remotely. 
+This is due to the fact that chrome does not allow WebAssembly modules to be loaded directly from the file system ( Edge and Firefox do not have such issue).
