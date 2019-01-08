@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>WebAssembly Real-Time Face Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <style>
+	body {
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+	}
+  </style>
+  <body>
+  <div align="center">
+	<h1>WebAssembly Real-Time Face Detection <small>via <a href="https://sod.pixlab.io" target="_blank">SOD RealNets</a></small></h1>
+	<button onclick="face_detect()">Start Face Detection</button><hr/>
+	<canvas id="face-canvas" style="border: 1px solid black;"></canvas>
+	<video id="face-video" autoplay playsinline hidden="true"></video>
+  </div>
+    <!-- This will load the RealNet WebAssembly face model and run its main. 
+	     The model must be downloaded from https://pixlab.io/downloads
+		 Once downloaded, just put it on the directory where this HTML
+		 file `usage.html` reside.
+		 
+		 For chrome users, you must test the model on actual Web server,
+		 whether served locally (i.e http://127.0.0.1) or remotely.
+		 This is due to the fact that chrome does not allow WebAssembly
+		 modules to be loaded directly from the file system (
+		 Edge and Firefox does not have such issue).
+	--> 
+    <script src="facemodel.js"></script>
+	<script>
+		function face_detect(){
+			var grayBuf = null; /* Working buffer holding the grayscale conversion of the current video frame */
+			var recs    = null;    /* Each detected face coordinates (top, left, width & height) is recorded in this array */
+			let vidSz = {width: 640, height: 480  , facingMode: "user" };
+			if (document.body.clientWidth < 600 ){
+				vidSz = true;
+			}
+			navigator.mediaDevices.getUserMedia({
+				audio: false, 
+				video: vidSz
+			}).then(function(mediaStream) {
+				/* Code taken from https://faceio.net JavaScript Widget */
+				let video = document.getElementById('face-video');
+				let vidCanvas = document.getElementById('face-canvas');
+				let vidctx = vidCanvas.getContext('2d');
+				video.srcObject = mediaStream;
+				video.onloadedmetadata = function(e) {
+					vidCanvas.width = video.videoWidth;
+					vidCanvas.height = video.videoHeight;
+					video.play();
+				}
+				video.addEventListener('play', function () {
+					let fps = 1000 / 25; /* Render at 25 fps. Feel free to increase to 30 if you are on a PC/Mac or Modern iPhone */
+					let loop = function() {
+						if (!video.paused && !video.ended) {
+							vidctx.drawImage(video, 0, 0);
+							if( grayBuf === null ){
+								grayBuf = _realnet_alloc_gray_image_buffer(640, 480);
+								recs = new Float32Array(Module.HEAPU8.buffer, _realnet_alloc_face_result_array(), _realnet_face_max_detection());
+							}else{
+								let imgData = vidctx.getImageData(0,0, vidCanvas.width, vidCanvas.height);
+								let gray = new Uint8ClampedArray( Module.HEAPU8.buffer, grayBuf, imgData.width * imgData.height);
+								for (let i = 0; i < imgData.data.length ; i += 4) {
+									gray[i >> 2] = (imgData.data[i] * 306 + imgData.data[i + 1] * 601 + imgData.data[i + 2] * 117) >> 10;
+								}
+								let faces = _realnet_face_detect(grayBuf, imgData.width, imgData.height, 11.0, recs.byteOffset);
+								/* faces now hold the total number of detected faces and the recs[] array hold their coordinates */
+								for(let i = 0; i < faces; i += 5 ){
+									/* Draw a rectangle on each detected face */
+									vidctx.beginPath();
+									vidctx.strokeStyle = "#32cd32";
+									vidctx.strokeRect(recs[i + 0],recs[i + 1],recs[i + 2],recs[i + 3]);
+									/* recs[i + 4] hold the score (i.e. threshold) of the current face */
+									console.log("Face_" + i + ": Score: " + recs[i + 4]);
+								}
+							}
+							setTimeout(loop, fps);
+						}else{
+							console.log("Video stream stopped");
+						}
+					}
+					/* Start painting on the canvas */
+					loop();
+				});
+			}).catch(function(err){
+				console.log("Access not granted", err);
+			});
+		}
+	</script>
+  </body>
+</html>
