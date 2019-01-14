@@ -1,7 +1,7 @@
-﻿/*
+/*
 * SOD - An Embedded Computer Vision & Machine Learning Library.
-* Copyright (C) 2018 PixLab| Symisc Systems. https://sod.pixlab.io
-* Version 1.1.7
+* Copyright (C) 2018 - 2019 PixLab| Symisc Systems. https://sod.pixlab.io
+* Version 1.1.8
 *
 * Symisc Systems employs a dual licensing model that offers customers
 * a choice of either our open source license (GPLv3) or a commercial
@@ -30,7 +30,7 @@
 * You should have received a copy of the GNU General Public License
 * along with SOD. If not, see <http://www.gnu.org/licenses/>.
 */
-/* $SymiscID: sod.c v1.1.7 Win10 2018-02-02 05:34 stable <devel@symisc.net> $ */
+/* $SymiscID: sod.c v1.1.8 Win10 2018-02-02 05:34 stable <devel@symisc.net> $ */
 #ifdef _MSC_VER
 #ifndef _CRT_SECURE_NO_WARNINGS
 /*
@@ -9701,7 +9701,7 @@ static int hilditch_func_nc8(int *b)
 */
 sod_img sod_hilditch_thin_image(sod_img im)
 {
-	/* thinning of binary image by Hilditch's algorithm */
+	/* thinning of binary image via Hilditch's algorithm */
 	int offset[9][2] = { { 0,0 },{ 1,0 },{ 1,-1 },{ 0,-1 },{ -1,-1 },
 	{ -1,0 },{ -1,1 },{ 0,1 },{ 1,1 } }; /* offsets for neighbors */
 	int n_odd[4] = { 1, 3, 5, 7 };      /* odd-number neighbors */
@@ -10665,6 +10665,94 @@ static void canny_hysteresis(int high, int low, sod_img * img_in, sod_img * img_
 			}
 		}
 	}
+}
+/* Based on the work: http://cis.k.hosei.ac.jp/~wakahara/ */
+static int minutiae_crossnumber(float *pixels,int y, int x, int w)
+{
+	int i, data[8];
+	int cross;
+
+	data[0] = pixels[y * w + x + 1] == 0 ? 1 : 0;
+	data[1] = pixels[(y - 1) * w + x + 1] == 0 ? 1 : 0;
+	data[2] = pixels[(y - 1) * w + x] == 0 ? 1 : 0;
+	data[3] = pixels[(y - 1) * w + (x - 1)] == 0 ? 1 : 0;
+	data[4] = pixels[y * w + (x - 1)] == 0 ? 1 : 0;
+	data[5] = pixels[(y + 1) * w + (x - 1)] == 0 ? 1 : 0;
+	data[6] = pixels[(y + 1) * w + x] == 0 ? 1 : 0;
+	data[7] = pixels[(y + 1) * w + x + 1] == 0 ? 1 : 0;
+	cross = 0;
+	for (i = 0; i < 8; i++) {
+		cross += abs(data[(i + 1) % 8] - data[i]);
+	}
+	cross /= 2;
+	return cross;
+}
+/*
+ * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT sod_img sod_minutiae(sod_img bin, int *pTotal, int *pEp, int *pBp)
+{
+	if (pTotal) {
+		*pTotal = 0;
+	}
+	if (pEp) {
+		*pEp = 0;
+	}
+	if (pBp) {
+		*pBp = 0;
+	}
+	/* Extraction of minutiae candidates in skeletonized fingerprint image */
+	if (bin.data == 0 || bin.c != SOD_IMG_GRAYSCALE) {
+		/* Must be a binary image  processed via sod_hilditch_thin_image() */
+		return sod_make_empty_image(0, 0, 0);
+	}
+	sod_img out = sod_make_image(bin.w, bin.h, bin.c);
+	if (out.data) {
+		int x, y;
+		int total, np1, np2;  /* number of black and minutiae points */
+		int cross;
+		int i;
+		for (i = 0; i < out.w*out.h; i++) {
+			if (bin.data[i] == 1) {
+				out.data[i] = 200;
+			}
+			else {
+				out.data[i] = 1;
+			}
+		}
+		/* finding minutiae in 3 x 3 window 
+		 * Minutiae extraction is applied to skeletonized fingerprint.
+		 */
+		total = 0;
+		np1 = 0;  /* number of ending points */
+		np2 = 0;  /* number of bifurcations */
+		for (y = 1; y < bin.h - 1; y++) {
+			for (x = 1; x < bin.w - 1; x++) {
+				if (bin.data[y * bin.w + x] == 0) {
+					total++;
+					cross = minutiae_crossnumber(bin.data, y, x, bin.w);
+					if (cross == 1) {
+						np1++;
+						out.data[y * bin.w + x] = 0;
+					}
+					else if (cross >= 3) {
+						np2++;
+						out.data[y * bin.w + x] = 0;
+					}
+				}
+			}
+		}
+		if (pTotal) {
+			*pTotal = total;
+		}
+		if (pEp) {
+			*pEp = np1;
+		}
+		if (pBp) {
+			*pBp = np2;
+		}	
+	}
+	return out;
 }
 /*
 * Gaussian Noise Reduce on a grayscale image.
