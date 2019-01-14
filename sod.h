@@ -2,8 +2,8 @@
 #define _SOD_H_
 /*
 * SOD - An Embedded Computer Vision & Machine Learning Library.
-* Copyright (C) 2018 PixLab| Symisc Systems. https://sod.pixlab.io
-* Version 1.1.7
+* Copyright (C) 2018 - 2019 PixLab| Symisc Systems. https://sod.pixlab.io
+* Version 1.1.8
 *
 * Symisc Systems employs a dual licensing model that offers customers
 * a choice of either our open source license (GPLv3) or a commercial 
@@ -52,7 +52,7 @@
  * version number and Y is the minor version number and Z is the release
  * number.
  */
-#define SOD_VERSION "1.1.7"
+#define SOD_VERSION "1.1.8"
  /*
  * The SOD_VERSION_NUMBER C preprocessor macro resolves to an integer
  * with the value (X*1000000 + Y*1000 + Z) where X, Y, and Z are the same
@@ -298,6 +298,7 @@ SOD_APIEXPORT void sod_img_bgr_to_rgb(sod_img im);
 SOD_APIEXPORT void sod_img_yuv_to_rgb(sod_img im);
 SOD_APIEXPORT void sod_img_rgb_to_yuv(sod_img im);
 
+SOD_APIEXPORT sod_img sod_minutiae(sod_img bin, int *pTotal, int *pEp, int *pBp);
 SOD_APIEXPORT sod_img sod_gaussian_noise_reduce(sod_img grayscale);
 SOD_APIEXPORT sod_img sod_equalize_histogram(sod_img im);
 
@@ -381,7 +382,7 @@ SOD_APIEXPORT void sod_img_save_to_cv_jpg(sod_img im, const char *zPath);
  * SOD Embedded Release Information & Copyright Notice.
  */
 SOD_APIEXPORT const char * sod_lib_copyright(void);
-#define SOD_LIB_INFO "SOD Embedded - Release 1.1.7 under GPLv3. Copyright (C) 2018 PixLab| Symisc Systems, https://sod.pixlab.io"
+#define SOD_LIB_INFO "SOD Embedded - Release 1.1.8 under GPLv3. Copyright (C) 2018 PixLab| Symisc Systems, https://sod.pixlab.io"
 #ifdef __cplusplus
  }
 #endif 
