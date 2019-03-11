@@ -67,7 +67,7 @@ The documentation works both as an API reference and a programming tutorial. It 
 <a href="https://sod.pixlab.io/intro.html">SOD in 5 minutes or less</a> | A quick introduction to programming with the SOD Embedded C/C++ API with real-world code samples implemented in C.
 <a href="https://sod.pixlab.io/api.html">C/C++ API Reference Guide</a> | This document describes each API function in details. This is the reference document you should rely on.
 <a href="https://sod.pixlab.io/samples.html">C/C++ Code Samples</a> | Real world code samples on how to embed, load models and start experimenting with SOD.
-<a href="https://sod.pixlab.io/articles/license-plate-detection.html">License Plate Detection</a> | "Learn how to detect vehicles license plates without heavy Machine Learning techniques, just standard image processing routines implemented by SOD.
+<a href="https://sod.pixlab.io/articles/license-plate-detection.html">License Plate Detection</a> | Learn how to detect vehicles license plates without heavy Machine Learning techniques, just standard image processing routines already implemented in SOD.
 
 ## Other useful links
 
