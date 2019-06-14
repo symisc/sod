@@ -68,6 +68,7 @@ The documentation works both as an API reference and a programming tutorial. It 
 <a href="https://sod.pixlab.io/api.html">C/C++ API Reference Guide</a> | This document describes each API function in details. This is the reference document you should rely on.
 <a href="https://sod.pixlab.io/samples.html">C/C++ Code Samples</a> | Real world code samples on how to embed, load models and start experimenting with SOD.
 <a href="https://sod.pixlab.io/articles/license-plate-detection.html">License Plate Detection</a> | Learn how to detect vehicles license plates without heavy Machine Learning techniques, just standard image processing routines already implemented in SOD.
+<a href="https://sod.pixlab.io/articles/porting-c-face-detector-webassembly.html">Porting our Face Detector to WebAssembly</a> | Learn how we ported the <a href="https://sod.pixlab.io/c_api/sod_realnet_detect.html">SOD Realnets face detector</a> into WebAssembly to achieve Real-time performance in the browser.
 
 ## Other useful links
 
