@@ -2,7 +2,7 @@
 #define _SOD_H_
 /*
 * SOD - An Embedded Computer Vision & Machine Learning Library.
-* Copyright (C) 2018 - 2019 PixLab| Symisc Systems. https://sod.pixlab.io
+* Copyright (C) 2018 - 2020 PixLab| Symisc Systems. https://sod.pixlab.io
 * Version 1.1.8
 *
 * Symisc Systems employs a dual licensing model that offers customers
