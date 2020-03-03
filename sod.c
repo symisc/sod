@@ -1,6 +1,6 @@
-/*
+﻿/*
 * SOD - An Embedded Computer Vision & Machine Learning Library.
-* Copyright (C) 2018 - 2019 PixLab| Symisc Systems. https://sod.pixlab.io
+* Copyright (C) 2018 - 2020 PixLab| Symisc Systems. https://sod.pixlab.io
 * Version 1.1.8
 *
 * Symisc Systems employs a dual licensing model that offers customers
@@ -30,7 +30,7 @@
 * You should have received a copy of the GNU General Public License
 * along with SOD. If not, see <http://www.gnu.org/licenses/>.
 */
-/* $SymiscID: sod.c v1.1.8 Win10 2018-02-02 05:34 stable <devel@symisc.net> $ */
+/* $SymiscID: sod.c v1.1.8 Win10 2019-11-16 03:23 stable <devel@symisc.net> $ */
 #ifdef _MSC_VER
 #ifndef _CRT_SECURE_NO_WARNINGS
 /*
@@ -1723,7 +1723,6 @@ static const sod_vfs sWinVfs = {
 #endif /* SOD_ENABLE_NET_TRAIN */
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/uio.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/file.h>
@@ -4584,6 +4583,21 @@ static inline void im2col_cpu(float* data_im,
 		c++;
 	}
 }
+#ifdef SOD_EMBEDDED_COMMERCIAL_LICENSE
+/* 
+ * Multi-core CPU support for SOD which is available in the commercial version of the library.
+ * You can obtain your commercial license from https://pixlab.io/downloads.
+ *
+ * Advantages includes:
+ *
+ *	Multi-core CPU support for all platforms - Up to 3 ~ 10 times faster processing speed.
+ *	Built-in (C Code), high performance RealNets frontal face detector.
+ *	75 days of integration & technical assistance.
+ *	Royalty-free commercial licenses without any GPL restrictions.
+ *	Application source code stays private.
+ */
+#include "sod_threads.h"
+#else
 static inline void gemm_nn(int M, int N, int K, float ALPHA,
 	float *A, int lda,
 	float *B, int ldb,
@@ -4606,6 +4620,7 @@ static inline void gemm_nn(int M, int N, int K, float ALPHA,
 		i++;
 	}
 }
+#endif /*  SOD_EMBEDDED_COMMERCIAL_LICENSE */
 static inline void gemm_nt(int M, int N, int K, float ALPHA,
 	float *A, int lda,
 	float *B, int ldb,
@@ -10824,11 +10839,11 @@ sod_img sod_canny_edge_image(sod_img im, int reduce_noise)
 		}
 		sobel = sod_make_image(im.w, im.h, 1);
 		out = sod_make_image(im.w, im.h, 1);
-		g = malloc(im.w * im.h * sizeof(int));
-		dir = malloc(im.w * im.h * sizeof(int));
+		g = malloc(im.w *(im.h + 16) * sizeof(int));
+		dir = malloc(im.w *(im.h + 16) * sizeof(int));
 		if (g && dir && sobel.data && out.data) {
-			canny_calc_gradient_sobel(&clean, g, dir);
-			canny_non_max_suppression(&sobel, g, dir);
+			canny_calc_gradient_sobel(&clean, &g[im.w], &dir[im.w]);
+			canny_non_max_suppression(&sobel, &g[im.w], &dir[im.w]);
 			canny_estimate_threshold(&sobel, &high, &low);
 			canny_hysteresis(high, low, &sobel, &out);
 		}
