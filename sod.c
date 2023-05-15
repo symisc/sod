@@ -7769,7 +7769,7 @@ static tree *read_tree(char *filename)
 	while ((line = fgetl(fp)) != 0) {
 		char *id = calloc(256, sizeof(char));
 		int parent = -1;
-		sscanf(line, "%s %d", id, &parent);
+		sscanf(line, "%255s %d", id, &parent);
 		t.parent = realloc(t.parent, (n + 1) * sizeof(int));
 		t.parent[n] = parent;
 
