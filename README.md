@@ -1,12 +1,11 @@
 <h1 align="center">SOD<br/><br/>An Embedded Computer Vision & Machine Learning Library<br/><a href="https://sod.pixlab.io">sod.pixlab.io</a></h1>
 
-[![Build Status](https://travis-ci.org/symisc/sod.svg?branch=master)](https://travis-ci.org/symisc/sod)
 [![API documentation](https://img.shields.io/badge/API%20documentation-Ready-green.svg)](https://sod.pixlab.io/api.html)
 [![dependency](https://img.shields.io/badge/dependency-none-ff96b4.svg)](https://pixlab.io/downloads)
 [![Getting Started](https://img.shields.io/badge/Getting%20Started-Now-f49242.svg)](https://sod.pixlab.io/intro.html)
 [![license](https://img.shields.io/badge/License-dual--licensed-blue.svg)](https://pixlab.io/downloads)
-[![Mailing list](https://img.shields.io/badge/Mailing%20List-G.Groups-42b3f4.svg)](https://groups.google.com/d/forum/sod-embedded)
-[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/sodcv/Lobby)
+[![Forum](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://community.faceio.net/)
+[![Tiny Dreal](https://pixlab.io/images/logo.png)](https://pixlab.io/tiny-dream)
 
 ![Output](https://i.imgur.com/YIbb8wr.jpg)
 
@@ -16,7 +15,8 @@
 * [Useful Links](#other-useful-links).
 
 ## SOD Embedded
-[Release 1.1.8](https://pixlab.io/downloads)
+
+### Release 1.1.9 (July 2023) | [Changelog](https://sod.pixlab.io/changelog.html) |  [Downloads](https://pixlab.io/downloads)
 
 SOD is an embedded, modern cross-platform computer vision and machine learning software library that exposes a set of APIs for deep-learning, advanced media analysis & processing including real-time, multi-class object detection and model training on embedded systems with limited computational resource and IoT devices.
 
