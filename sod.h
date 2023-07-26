@@ -2,8 +2,8 @@
 #define _SOD_H_
 /*
 * SOD - An Embedded Computer Vision & Machine Learning Library.
-* Copyright (C) 2018 - 2020 PixLab| Symisc Systems. https://sod.pixlab.io
-* Version 1.1.8
+* Copyright (C) 2018 - 2023 PixLab| Symisc Systems. https://sod.pixlab.io
+* Version 1.1.9
 *
 * Symisc Systems employs a dual licensing model that offers customers
 * a choice of either our open source license (GPLv3) or a commercial 
@@ -52,13 +52,13 @@
  * version number and Y is the minor version number and Z is the release
  * number.
  */
-#define SOD_VERSION "1.1.8"
+#define SOD_VERSION "1.1.9"
  /*
  * The SOD_VERSION_NUMBER C preprocessor macro resolves to an integer
  * with the value (X*1000000 + Y*1000 + Z) where X, Y, and Z are the same
  * numbers used in [SOD_VERSION].
  */
-#define SOD_VERSION_NUMBER 1001007
+#define SOD_VERSION_NUMBER 1001009
 /*
  * Forward declarations. 
  */
@@ -120,7 +120,11 @@ struct sod_img {
 	int h;   /* Image/frame height */
 	int w;   /* Image/frame width */
 	int c;   /* Image depth/Total number of color channels e.g. 1 for grayscale images, 3 RGB, etc. */
-	float *data; /* Blob */
+	union
+	{
+		float* data; /* Blob */
+		unsigned char* zdata;
+	};
 };
 /*
  * An instance of the `sod_pts` structure describe a 2D point in space with integer coordinates
@@ -236,6 +240,7 @@ SOD_APIEXPORT void sod_cnn_destroy(sod_cnn *pNet);
 SOD_APIEXPORT float *  sod_cnn_prepare_image(sod_cnn *pNet, sod_img in);
 SOD_APIEXPORT int sod_cnn_get_network_size(sod_cnn *pNet, int *pWidth, int *pHeight, int *pChannels);
 #endif /* SOD_DISABLE_CNN */
+#ifndef SOD_DISABLE_REALNET
 /*
  * RealNets API.
  *
@@ -243,10 +248,13 @@ SOD_APIEXPORT int sod_cnn_get_network_size(sod_cnn *pNet, int *pWidth, int *pHei
  */
 SOD_APIEXPORT int sod_realnet_create(sod_realnet **ppOut);
 SOD_APIEXPORT int sod_realnet_load_model_from_mem(sod_realnet *pNet, const void * pModel, unsigned int nBytes, sod_realnet_model_handle *pOutHandle);
+#ifdef SOD_NO_MMAP
 SOD_APIEXPORT int sod_realnet_load_model_from_disk(sod_realnet *pNet, const char * zPath, sod_realnet_model_handle *pOutHandle);
+#endif
 SOD_APIEXPORT int sod_realnet_model_config(sod_realnet *pNet, sod_realnet_model_handle handle, SOD_REALNET_MODEL_CONFIG conf, ...);
 SOD_APIEXPORT int sod_realnet_detect(sod_realnet *pNet, const unsigned char *zGrayImg, int width, int height, sod_box **apBox, int *pnBox);
 SOD_APIEXPORT void sod_realnet_destroy(sod_realnet *pNet);
+#endif /* SOD_DISABLE_REALNET */
 #ifdef SOD_ENABLE_NET_TRAIN
 /*
  * RealNets Training API.
@@ -297,6 +305,20 @@ SOD_APIEXPORT void sod_img_rgb_to_bgr(sod_img im);
 SOD_APIEXPORT void sod_img_bgr_to_rgb(sod_img im);
 SOD_APIEXPORT void sod_img_yuv_to_rgb(sod_img im);
 SOD_APIEXPORT void sod_img_rgb_to_yuv(sod_img im);
+
+/* Introduced in version 1.1.9 */
+SOD_APIEXPORT void sod_constrain_image(sod_img im);
+SOD_APIEXPORT sod_img sod_img_mask_to_rgb(sod_img mask);
+SOD_APIEXPORT void sod_censor_image(sod_img im, int dx, int dy, int w, int h);
+SOD_APIEXPORT void sod_saturate_image(sod_img im, float sat);
+SOD_APIEXPORT void sod_saturate_exposure_image(sod_img im, float sat, float exposure);
+SOD_APIEXPORT void sod_hue_image(sod_img im, float hue);
+SOD_APIEXPORT void sod_exposure_image(sod_img im, float sat);
+SOD_APIEXPORT void sod_distort_image(sod_img im, float hue, float sat, float val);
+SOD_APIEXPORT void sod_random_distort_image(sod_img im, float hue, float saturation, float exposure);
+SOD_APIEXPORT sod_img sod_box_blur_image(sod_img im);
+SOD_APIEXPORT void sod_image_sepia_filter(sod_img rgb);
+SOD_APIEXPORT sod_img sod_gaussian_blur_image(sod_img im, int radius, double sigma);
 
 SOD_APIEXPORT sod_img sod_minutiae(sod_img bin, int *pTotal, int *pEp, int *pBp);
 SOD_APIEXPORT sod_img sod_gaussian_noise_reduce(sod_img grayscale);
@@ -382,7 +404,7 @@ SOD_APIEXPORT void sod_img_save_to_cv_jpg(sod_img im, const char *zPath);
  * SOD Embedded Release Information & Copyright Notice.
  */
 SOD_APIEXPORT const char * sod_lib_copyright(void);
-#define SOD_LIB_INFO "SOD Embedded - Release 1.1.8 under GPLv3. Copyright (C) 2018 PixLab| Symisc Systems, https://sod.pixlab.io"
+#define SOD_LIB_INFO "SOD Embedded - Release 1.1.9 under GPLv3/Commercial Licensing. Copyright (C) 2018 - 2023 PixLab| Symisc Systems, https://sod.pixlab.io"
 #ifdef __cplusplus
  }
 #endif 
