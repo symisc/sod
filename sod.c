@@ -1,6 +1,6 @@
-﻿/*
+/*
 * SOD - An Embedded Computer Vision & Machine Learning Library.
-* Copyright (C) 2018 - 2020 PixLab| Symisc Systems. https://sod.pixlab.io
+* Copyright (C) 2018 - 2023 PixLab| Symisc Systems. https://sod.pixlab.io
 * Version 1.1.8
 *
 * Symisc Systems employs a dual licensing model that offers customers
@@ -30,7 +30,7 @@
 * You should have received a copy of the GNU General Public License
 * along with SOD. If not, see <http://www.gnu.org/licenses/>.
 */
-/* $SymiscID: sod.c v1.1.8 Win10 2019-11-16 03:23 stable <devel@symisc.net> $ */
+/* $SymiscID: sod.c v1.1.9 Win10 2023-07-26 02:50 stable <devel@symisc.net> $ */
 #ifdef _MSC_VER
 #ifndef _CRT_SECURE_NO_WARNINGS
 /*
@@ -1723,8 +1723,11 @@ static const sod_vfs sWinVfs = {
 #endif /* SOD_ENABLE_NET_TRAIN */
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/uio.h>
 #include <sys/stat.h>
+#ifndef SOD_NO_MMAP
 #include <sys/mman.h>
+#endif
 #include <sys/file.h>
 #include <dirent.h>
 #include <utime.h>
@@ -1834,6 +1837,7 @@ static int UnixVfs_isexecutable(const char *zPath)
 /* int (*xMmap)(const char *, void **, size_t *) */
 static int UnixVfs_Mmap(const char *zPath, void **ppMap, size_t *pSize)
 {
+#ifndef SOD_NO_MMAP
 	struct stat st;
 	void *pMap;
 	int fd;
@@ -1858,11 +1862,16 @@ static int UnixVfs_Mmap(const char *zPath, void **ppMap, size_t *pSize)
 	}
 	close(fd);
 	return rc;
+#else
+	return -1;
+#endif
 }
 /* void (*xUnmap)(void *, size_t)  */
 static void UnixVfs_Unmap(void *pView, size_t nSize)
 {
+#ifndef SOD_NO_MMAP
 	munmap(pView, nSize);
+#endif
 }
 /* int (*xOpenDir)(const char *, void **) */
 static int UnixDir_Open(const char *zPath, void **ppHandle)
@@ -1961,7 +1970,42 @@ static const sod_vfs sUnixVfs = {
 	0,    /* void (*xTempDir)(SyBlob *) */
 	UnixVfs_get_ticks   /* float (*xTicks)() */
 };
-#endif /* __WINNT__/__UNIXES__ */
+#else
+/* Export the NULL VFS for OS_OTHER */
+static const sod_vfs sNullVfs = {
+	"Null_vfs",
+	LIBCOX_VFS_VERSION,
+	0,
+	255,
+	0,    /* int (*xChdir)(const char *) */
+	0,   /* int (*xGetcwd)(SyBlob *) */
+	0,    /* int (*xMkdir)(const char *, int, int) */
+	0,    /* int (*xRmdir)(const char *) */
+	0,    /* int (*xIsdir)(const char *) */
+	0,   /* int (*xRename)(const char *, const char *) */
+	0, /*int (*xRealpath)(const char *, SyBlob *)*/
+	/* Directory */
+	0,
+	0,
+	0,
+	0,
+	0,   /* int (*xUnlink)(const char *) */
+	0, /* int (*xFileExists)(const char *) */
+	0,             /* int64_t (*xFreeSpace)(const char *) */
+	0,             /* int64_t (*xTotalSpace)(const char *) */
+	0, /* int64_t (*xFileSize)(const char *) */
+	0,     /* int (*xIsfile)(const char *) */
+	0, /* int (*xReadable)(const char *) */
+	0, /* int (*xWritable)(const char *) */
+	0, /* int (*xExecutable)(const char *) */
+	0,     /* int (*xGetenv)(const char *, SyBlob *) */
+	0,     /* int (*xSetenv)(const char *, const char *) */
+	0,       /* int (*xMmap)(const char *, void **, int64_t *) */
+	0,      /* void (*xUnmap)(void *, int64_t);  */
+	0,    /* void (*xTempDir)(SyBlob *) */
+	0   /* float (*xTicks)() */
+};
+#endif /* __WINNT__/__UNIXES__/OS_OTHER */
 /*
 * Export the builtin vfs.
 * Return a pointer to the builtin vfs if available.
@@ -1976,6 +2020,8 @@ static const sod_vfs * sodExportBuiltinVfs(void)
 {
 #ifdef __WINNT__
 	return &sWinVfs;
+#elif defined(OS_OTHER)
+	return &sNullVfs;
 #else
 	/* Assume UNIX-Like */
 	return &sUnixVfs;
@@ -10703,6 +10749,265 @@ static int minutiae_crossnumber(float *pixels,int y, int x, int w)
 	return cross;
 }
 /*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_constrain_image(sod_img im)
+{
+	int i;
+	for (i = 0; i < im.w * im.h * im.c; ++i) {
+		if (im.data[i] < 0) im.data[i] = 0;
+		if (im.data[i] > 1) im.data[i] = 1;
+	}
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+static inline float get_color(int c, int x, int max)
+{
+	static const float colors[6][3] = { {1,0,1}, {0,0,1},{0,1,1},{0,1,0},{1,1,0},{1,0,0} };
+	float ratio = ((float)x / max) * 5;
+	int i = floor(ratio);
+	int j = ceil(ratio);
+	ratio -= i;
+	float r = (1 - ratio) * colors[i][c] + ratio * colors[j][c];
+	return r;
+}
+SOD_APIEXPORT sod_img sod_img_mask_to_rgb(sod_img mask)
+{
+	sod_img im = sod_make_image(mask.w, mask.h, 3);
+	int n = mask.c;
+	int i, j;
+	if (!im.data)
+		return sod_make_empty_image(mask.w, mask.h, 3);
+	for (j = 0; j < n; ++j) {
+		int offset = j * 123457 % n;
+		float red = get_color(2, offset, n);
+		float green = get_color(1, offset, n);
+		float blue = get_color(0, offset, n);
+		for (i = 0; i < im.w * im.h; ++i) {
+			im.data[i + 0 * im.w * im.h] += mask.data[j * im.h * im.w + i] * red;
+			im.data[i + 1 * im.w * im.h] += mask.data[j * im.h * im.w + i] * green;
+			im.data[i + 2 * im.w * im.h] += mask.data[j * im.h * im.w + i] * blue;
+		}
+	}
+	return im;
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_censor_image(sod_img im, int dx, int dy, int w, int h)
+{
+	const int s = 32;
+	int i, j, k;
+	if (dx < 0) dx = 0;
+	if (dy < 0) dy = 0;
+	for (k = 0; k < im.c; ++k) {
+		for (j = dy; j < dy + h && j < im.h; ++j) {
+			for (i = dx; i < dx + w && i < im.w; ++i) {
+				im.data[i + im.w * (j + im.h * k)] = im.data[i / s * s + im.w * (j / s * s + im.h * k)];
+			}
+		}
+	}
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_saturate_image(sod_img im, float sat)
+{
+	sod_img_rgb_to_hsv(im);
+	sod_scale_image_channel(im, 1, sat);
+	sod_img_hsv_to_rgb(im);
+	sod_constrain_image(im);
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_saturate_exposure_image(sod_img im, float sat, float exposure)
+{
+	sod_img_rgb_to_hsv(im);
+	sod_scale_image_channel(im, 1, sat);
+	sod_scale_image_channel(im, 2, exposure);
+	sod_img_hsv_to_rgb(im);
+	sod_constrain_image(im);
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_hue_image(sod_img im, float hue)
+{
+	int i;
+	sod_img_rgb_to_hsv(im);
+	for (i = 0; i < im.w * im.h; ++i) {
+		im.data[i] = im.data[i] + hue;
+		if (im.data[i] > 1) im.data[i] -= 1;
+		if (im.data[i] < 0) im.data[i] += 1;
+	}
+	sod_img_hsv_to_rgb(im);
+	sod_constrain_image(im);
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_exposure_image(sod_img im, float sat)
+{
+	sod_img_rgb_to_hsv(im);
+	sod_scale_image_channel(im, 2, sat);
+	sod_img_hsv_to_rgb(im);
+	sod_constrain_image(im);
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_distort_image(sod_img im, float hue, float sat, float val)
+{
+	sod_img_rgb_to_hsv(im);
+	sod_scale_image_channel(im, 1, sat);
+	sod_scale_image_channel(im, 2, val);
+	int i;
+	for (i = 0; i < im.w * im.h; ++i) {
+		im.data[i] = im.data[i] + hue;
+		if (im.data[i] > 1) im.data[i] -= 1;
+		if (im.data[i] < 0) im.data[i] += 1;
+	}
+	sod_img_hsv_to_rgb(im);
+	sod_constrain_image(im);
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_random_distort_image(sod_img im, float hue, float saturation, float exposure)
+{
+	float dhue = rand_uniform(-hue, hue);
+	float dsat = rand_scale(saturation);
+	float dexp = rand_scale(exposure);
+	sod_distort_image(im, dhue, dsat, dexp);
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT void sod_image_sepia_filter(sod_img rgb)
+{
+	int x, y;
+	if (rgb.c != 3)
+		return;
+	sod_img_rgb_to_yuv(rgb);
+	for (x = 0; x < rgb.w; x++) {
+		for (y = 0; y < rgb.h; y++) {
+			float r, g, b;
+			r = .393 * get_pixel(rgb, x, y, 0) + .769 * get_pixel(rgb, x, y, 1) + .189 * get_pixel(rgb, x, y, 2);
+			g = .349 * get_pixel(rgb, x, y, 0) + .686 * get_pixel(rgb, x, y, 1) + .168 * get_pixel(rgb, x, y, 2);
+			b = .272 * get_pixel(rgb, x, y, 0) + .534 * get_pixel(rgb, x, y, 1) + .131 * get_pixel(rgb, x, y, 2);
+			if (r > 255.)
+				r = 255.;
+			set_pixel(rgb, x, y, 0, r);
+			if (g > 255.)
+				g = 255.;
+			set_pixel(rgb, x, y, 1, g);
+			if (b > 255.)
+				b = 255.;
+			set_pixel(rgb, x, y, 2, b);
+		}
+	}
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT sod_img sod_box_blur_image(sod_img im)
+{
+	/* to blur we need to take pixel in the center and equalize to it neighboring pixels */
+	int x, y;
+	float sum = 0.0;
+	sod_img blurred;
+	const int filter[3][3] = {
+		{1, 2, 1},
+		{2, 4, 2},
+		{1, 2, 1}
+	};
+	const int filterDiv = 16;
+	const int filterWidth = 3;
+	const int filterHeight = 3;
+	if( im.c != 3 )
+		return sod_make_empty_image(im.w, im.h, im.c);
+	blurred = sod_make_image(im.w, im.h, im.c);
+	if (!blurred.data)
+		return sod_make_empty_image(im.w, im.h, im.c);
+	for (x = 0; x < im.w; x++) {
+		for (y = 0; y < im.h; y++) {
+			float sumr = 0, sumg = 0, sumb = 0;
+			int filterY, filterX;
+			for (filterY = 0; filterY < filterHeight; filterY++) {
+				for (filterX = 0; filterX < filterWidth; filterX++) {
+					int imageX = (x - filterWidth / 2 + filterX + im.w) % im.w;
+					int imageY = (y - filterHeight / 2 + filterY + im.h) % im.h;
+					sumr += get_pixel(im, imageX, imageY, 0) * filter[filterY][filterX];
+					sumg += get_pixel(im, imageX, imageY, 1) * filter[filterY][filterX];
+					sumb += get_pixel(im, imageX, imageY, 2) * filter[filterY][filterX];
+				}
+			}
+			set_pixel(blurred, x, y, 0, sumr / filterDiv);
+			set_pixel(blurred, x, y, 1, sumg / filterDiv);
+			set_pixel(blurred, x, y, 2, sumb / filterDiv);
+		}
+	}
+	return blurred;
+}
+static double gaussianModel(double x, double y, double sigma) {
+	return 1. / exp(-(x * x + y * y) / (2 * sigma * sigma));
+}
+static double* generate_coeff(int radius, double sigma) {
+	double* coeff;
+	double sum = 0.0;
+	coeff = malloc(sizeof(double) * radius * radius);
+	if (!coeff)
+		return 0;
+	for (int i = 0; i < radius; i++) {
+		for (int j = 0; j < radius; j++) {
+			coeff[i * radius + j] = gaussianModel(i - radius / 2, j - radius / 2, sigma);
+			sum += coeff[i * radius + j];
+		}
+	}
+	for (int i = 0; i < radius * radius; i++)
+		coeff[i] /= sum;
+	return coeff;
+}
+/*
+ * CAPIREF (Version 1.1.9): Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
+ */
+SOD_APIEXPORT sod_img sod_gaussian_blur_image(sod_img im, int radius, double sigma)
+{
+	float b, g, r;
+	double* coeff;
+	int i, j, m, n;
+	sod_img blurred;
+	if (im.c != 3)
+		return sod_make_empty_image(im.w, im.h, im.c);
+	blurred = sod_make_image(im.w, im.h, im.c);
+	if (!blurred.data)
+		return sod_make_empty_image(im.w, im.h, im.c);
+	coeff = generate_coeff(radius, sigma);
+	if (!coeff) {
+		sod_free_image(blurred);
+		return sod_make_empty_image(im.w, im.h, im.c);
+	}
+	for (i = 0; i < im.h - radius; i++) {
+		for (j = 0; j < im.w - radius; j++) {
+			b = g = r = 0.0;
+			for (m = 0; m < radius; m++) {
+				for (n = 0; n < radius; n++) {
+					r += coeff[m * radius + n] * get_pixel(im, j + n, i + m, 0);
+					g += coeff[m * radius + n] * get_pixel(im, j + n, i + m, 1);
+					b += coeff[m * radius + n] * get_pixel(im, j + n, i + m, 2);
+				}
+			}
+			set_pixel(blurred, j, i, 0, r);
+			set_pixel(blurred, j, i, 1, g);
+			set_pixel(blurred, j, i, 2, b);
+		}
+	}
+	free(coeff);
+	return blurred;
+}
+/*
  * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
  */
 SOD_APIEXPORT sod_img sod_minutiae(sod_img bin, int *pTotal, int *pEp, int *pBp)
@@ -10842,8 +11147,8 @@ sod_img sod_canny_edge_image(sod_img im, int reduce_noise)
 		g = malloc(im.w *(im.h + 16) * sizeof(int));
 		dir = malloc(im.w *(im.h + 16) * sizeof(int));
 		if (g && dir && sobel.data && out.data) {
-			canny_calc_gradient_sobel(&clean, &g[im.w], &dir[im.w]);
-			canny_non_max_suppression(&sobel, &g[im.w], &dir[im.w]);
+			canny_calc_gradient_sobel(&clean, g, dir);
+			canny_non_max_suppression(&sobel, g, dir);
 			canny_estimate_threshold(&sobel, &high, &low);
 			canny_hysteresis(high, low, &sobel, &out);
 		}
@@ -13332,6 +13637,7 @@ static void sodNmsDiscardBoxes(SySet *pBox)
 	}
 	pBox->nUsed = nNewCount;
 }
+#ifndef SOD_DISABLE_REALNET
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
@@ -13374,6 +13680,7 @@ int sod_realnet_load_model_from_mem(sod_realnet *pNet, const void * pModel, unsi
 	}
 	return SOD_OK;
 }
+#ifndef SOD_NO_MMAP
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
@@ -13384,6 +13691,8 @@ int sod_realnet_load_model_from_disk(sod_realnet *pNet, const char * zPath, sod_
 	void *pMap = 0;
 	size_t sz;
 	int rc;
+	if (!pVfs->xMmap)
+		return SOD_IOERR;
 	if (SOD_OK != pVfs->xMmap(zPath, &pMap, &sz)) {
 		return SOD_IOERR;
 	}
@@ -13405,6 +13714,7 @@ int sod_realnet_load_model_from_disk(sod_realnet *pNet, const char * zPath, sod_
 	}
 	return SOD_OK;
 }
+#endif
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
@@ -13545,6 +13855,7 @@ void sod_realnet_destroy(sod_realnet * pNet)
 	_CrtDumpMemoryLeaks();
 #endif /* #ifdSOD_MEM_DEBUG */
 }
+#endif /* SOD_DISABLE_REALNET */
 #ifndef SOD_DISABLE_IMG_READER
 #ifdef _MSC_VER
 /* Disable the nonstandard extension used: non-constant aggregate initializer warning */
@@ -13590,7 +13901,7 @@ sod_img sod_img_load_from_file(const char *zFile, int nChannels)
 	size_t sz = 0; /* gcc warn */
 	int w, h, c;
 	int i, j, k;
-	if (SOD_OK != pVfs->xMmap(zFile, &pMap, &sz)) {
+	if (!pVfs->xMmap || SOD_OK != pVfs->xMmap(zFile, &pMap, &sz)) {
 		data = stbi_load(zFile, &w, &h, &c, nChannels);
 	}
 	else {
@@ -13729,6 +14040,8 @@ int sod_img_set_load_from_directory(const char * zPath, sod_img ** apLoaded, int
 	void *pHandle;
 	sod_img img;
 	int i, rc;
+	if (!pVfs->xOpenDir)
+		return SOD_IOERR;
 	/* Open the target directory */
 	rc = pVfs->xOpenDir(zPath, &pHandle);
 	if (rc != SOD_OK) {
